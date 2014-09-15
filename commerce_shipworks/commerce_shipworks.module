@@ -1,1 +1,69 @@
 <?php
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_shipworks_permission() {
+  return array(
+    'administer shipworks' => array(
+      'title' => t('Administer shipworks'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function commerce_shipworks_menu() {
+  $items = array();
+
+  $items['admin/commerce/config/shipworks'] = array(
+    'title' => 'Shipworks',
+    'description' => 'Manage shipworks configurations.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_shipworks_config_form'),
+    'access arguments' => array('administer shipworks'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Administer shipworks configurations form.
+ */
+function commerce_shipworks_config_form($form, &$form_state) {
+  $form['commerce_shipworks_api_username'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Shipworks API username'),
+    '#default_value' => variable_get('commerce_shipworks_api_username', ''),
+    '#size' => 40,
+    '#maxlength' => 120,
+    '#required' => TRUE,
+  );
+  
+  $form['commerce_shipworks_api_password'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Shipworks API password'),
+    '#default_value' => variable_get('commerce_shipworks_api_password', ''),
+    '#size' => 40,
+    '#maxlength' => 120,
+    '#required' => TRUE,
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save settings'),
+  );
+
+  return $form;
+}
+
+/**
+* Save shipworks configurations.
+*/
+function commerce_shipworks_config_form_submit($form, &$form_state) {
+  variable_set('commerce_shipworks_api_username', $form_state['values']['commerce_shipworks_api_username']);
+  variable_set('commerce_shipworks_api_password', $form_state['values']['commerce_shipworks_api_password']);
+  drupal_set_message(t('The settings have been saved'));
+}
