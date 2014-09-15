@@ -1,0 +1,7 @@
+name = Commerce Shipworks
+description = Intergrate shipworks into Drupal Commerce.
+package = Commerce (other)
+dependencies[] = commerce
+dependencies[] = commerce_cart
+dependencies[] = commerce_shipping
+core = 7.x

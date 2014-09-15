@@ -1,0 +1,83 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function commerce_shipworks_schema() {
+  $schema['commerce_shipworks_postlog'] = array(
+    'description' => 'The post logs of shipworks http requests.',
+    'fields' => array(
+      'postlog_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'postvalues' => array(
+        'type' => 'text',
+        'size' => 'big',
+      ),
+      'output' => array(
+        'type' => 'text',
+        'size' => 'big',
+      ),
+      'success' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'commerce_shipworks_postlog_created' => array('created'),
+    ),
+    'primary key' => array('postlog_id'),
+  );
+
+  $schema['commerce_shipworks_shipment'] = array(
+    'description' => 'Shipment information from shipworks.',
+    'fields' => array(
+      'shipment_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'order_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'tracking' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'commerce_shipworks_shipment_order_id' => array('order_id'),
+      'commerce_shipworks_shipment_tracking' => array('tracking'),
+      'commerce_shipworks_shipment_created' => array('created'),
+    ),
+    'primary key' => array('shipment_id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function commerce_shipworks_uninstall() {
+}
