@@ -26,6 +26,13 @@ function commerce_shipworks_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  $items['commerce/shipworks/api'] = array(
+    'title' => 'Commerce shipworks api',
+    'page callback' => 'commerce_shipworks_api',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -66,4 +73,28 @@ function commerce_shipworks_config_form_submit($form, &$form_state) {
   variable_set('commerce_shipworks_api_username', $form_state['values']['commerce_shipworks_api_username']);
   variable_set('commerce_shipworks_api_password', $form_state['values']['commerce_shipworks_api_password']);
   drupal_set_message(t('The settings have been saved'));
+}
+
+/**
+* Shipworks api for http requests.
+*/
+function commerce_shipworks_api() {
+  // using output buffering to get around headers that magento is setting after we've started output
+  ob_start();
+
+  header("Content-Type: text/xml;charset=utf-8");
+  header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+
+  // HTTP/1.1
+  header("Cache-Control: no-store, no-cache, must-revalidate");
+  header("Cache-Control: post-check=0, pre-check=0", false);
+
+  // HTTP/1.0
+  header("Pragma: no-cache");
+
+  // test output
+  echo "<?xml version=\"1.0\" standalone=\"yes\" ?><aaa><bbb>ccc</bbb><ddd>eee</ddd></aaa>";
+
+  // end output
+  ob_end_flush();
 }
