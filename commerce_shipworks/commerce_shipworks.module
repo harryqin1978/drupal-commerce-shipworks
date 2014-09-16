@@ -152,10 +152,10 @@ function commerce_shipworks_api() {
       case 'updatestatus': commerce_shipworks_action_update_status(); break;
       case 'updateshipment': commerce_shipworks_action_update_shipment(); break;
       default:
-        commerce_shipworks_output_error(1, "'$action' is not supported.");
+        commerce_shipworks_output_error(1, t('Action \'@action\' is not supported.', array('@action' => $action)));
     }
   } else {
-    commerce_shipworks_output_error(2, "Verification failed.");
+    commerce_shipworks_output_error(2, t('Verification failed.'));
   }
 
   // Close the output
@@ -204,6 +204,21 @@ function commerce_shipworks_action_get_store()
     commerce_shipworks_write_element("Country", $country);
     commerce_shipworks_write_element("Website", $website);
   commerce_shipworks_write_close_tag("Store");
+}
+
+// Returns the status codes for the store
+function commerce_shipworks_action_get_status_codes() {
+
+  $statuses = commerce_order_states();
+
+  commerce_shipworks_write_start_tag("StatusCodes");
+  foreach ($statuses as $status) {
+    commerce_shipworks_write_start_tag("StatusCode");
+      commerce_shipworks_write_element("Code", $status['name']);
+      commerce_shipworks_write_element("Name", $status['title']);
+    commerce_shipworks_write_close_tag("StatusCode");
+  }
+  commerce_shipworks_write_close_tag("StatusCodes");
 }
 
 // Check to see if admin functions exist.  And if so, determine if the user
