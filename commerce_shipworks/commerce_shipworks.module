@@ -1,6 +1,20 @@
 <?php
 
 /**
+ * @author Harry Qin (zergling9999@hotmail.com)
+ *
+ * @file
+ * Intergrate ShipWorks application into Drupal Commerce.
+ *
+ * NOTE: I did not implement commerce_shipworks_action_update_shipment, for i can not find how to trigger it in ShipWorks.
+ */
+
+define("SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
+define("SHIPWORKS_DEVELOPER", "Harry Qin (zergling9999@hotmail.com)");
+define("SHIPWORKS_MODULE_VERSION", "3.0.0");
+define("SHIPWORKS_SCHEMA_VERSION", "1.0.0");
+
+/**
  * Implements hook_permission().
  */
 function commerce_shipworks_permission() {
@@ -67,8 +81,8 @@ function commerce_shipworks_config_form($form, &$form_state) {
 }
 
 /**
-* Save shipworks configurations.
-*/
+ * Save shipworks configurations.
+ */
 function commerce_shipworks_config_form_submit($form, &$form_state) {
   variable_set('commerce_shipworks_api_username', $form_state['values']['commerce_shipworks_api_username']);
   variable_set('commerce_shipworks_api_password', $form_state['values']['commerce_shipworks_api_password']);
@@ -76,8 +90,8 @@ function commerce_shipworks_config_form_submit($form, &$form_state) {
 }
 
 /**
-* Shipworks api for http requests.
-*/
+ * Shipworks api for http requests.
+ */
 function commerce_shipworks_api() {
   // using output buffering to get around headers that magento is setting after we've started output
   ob_start();
@@ -92,9 +106,125 @@ function commerce_shipworks_api() {
   // HTTP/1.0
   header("Pragma: no-cache");
 
-  // test output
-  echo "<?xml version=\"1.0\" standalone=\"yes\" ?><aaa><bbb>ccc</bbb><ddd>eee</ddd></aaa>";
+  // TODO: records http post requests and post values.
+
+  // Open the XML output and root
+  commerce_shipworks_write_xml_declaration();
+  commerce_shipworks_write_start_tag("ShipWorks", array("moduleVersion" => SHIPWORKS_MODULE_VERSION, "schemaVersion" => SHIPWORKS_SCHEMA_VERSION));
+
+  // If the admin module is installed, we make use of it
+  if (commerce_shipworks_check_admin_login()) {
+    $action = (isset($_REQUEST['action']) ? $_REQUEST['action'] : '');
+    switch (strtolower($action)) {
+      case 'getmodule': commerce_shipworks_action_get_module(); break;
+      case 'getstore': commerce_shipworks_action_get_store(); break;
+      case 'getcount': commerce_shipworks_action_get_count(); break;
+      case 'getorders': commerce_shipworks_action_get_orders(); break;
+      case 'getstatuscodes': commerce_shipworks_action_get_status_codes(); break;
+      case 'updateorder': commerce_shipworks_action_update_order(); break;
+      case 'updatestatus': commerce_shipworks_action_update_status(); break;
+      case 'updateshipment': commerce_shipworks_action_update_shipment(); break;
+      default:
+        commerce_shipworks_output_error(1, "'$action' is not supported.");
+    }
+  } else {
+    commerce_shipworks_output_error(2, "Verification failed.");
+  }
+
+  // Close the output
+  commerce_shipworks_write_close_tag("ShipWorks");
 
   // end output
   ob_end_flush();
 }
+
+// Write module data
+function commerce_shipworks_action_get_module()
+{
+  commerce_shipworks_write_start_tag("Module");
+  
+    commerce_shipworks_write_element("Platform", SHIPWORKS_PLATFORM);
+    commerce_shipworks_write_element("Developer", SHIPWORKS_DEVELOPER);
+
+    commerce_shipworks_write_start_tag("Capabilities");
+      commerce_shipworks_write_element("DownloadStrategy", "ByModifiedTime");
+      commerce_shipworks_write_full_element("OnlineCustomerID", "", array("supported" => "true", "dataType" => "numeric"));
+      commerce_shipworks_write_full_element("OnlineStatus", "", array("supported" => "true", "dataType" => "text", "downloadOnly" => "false" ));
+      commerce_shipworks_write_full_element("OnlineShipmentUpdate", "", array("supported" => "true"));
+    commerce_shipworks_write_close_tag("Capabilities");
+  
+  commerce_shipworks_write_close_tag("Module");
+}
+
+// Check to see if admin functions exist.  And if so, determine if the user
+// has access.
+function commerce_shipworks_check_admin_login() {
+  $api_username = variable_get('commerce_shipworks_api_username', '');
+  $api_password = variable_get('commerce_shipworks_api_password', '');
+  $post_username = isset($_REQUEST['username']) ? $_REQUEST['username'] : '';
+  $post_password = isset($_REQUEST['password']) ? $_REQUEST['password'] : '';
+  if ($api_username && $api_password && $api_username == $post_username && $api_password == $post_password) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// write xml documenta declaration
+function commerce_shipworks_write_xml_declaration() {
+  echo "<?xml version=\"1.0\" standalone=\"yes\" ?>";
+}
+
+function commerce_shipworks_write_start_tag($tag, $attributes = null) {
+  echo '<' . $tag;
+  if ($attributes != null) {
+    echo ' ';
+    foreach ($attributes as $name => $attribValue) {
+      echo $name. '="'. htmlspecialchars($attribValue). '" ';
+    }
+  }
+  echo '>';
+}
+
+// write closing xml tag
+function commerce_shipworks_write_close_tag($tag) {
+  echo '</' . $tag . '>';
+}
+
+// Output the given tag\value pair
+function commerce_shipworks_write_element($tag, $value) {
+  commerce_shipworks_write_start_tag($tag);
+  echo htmlspecialchars($value);
+  commerce_shipworks_write_close_tag($tag);
+}
+
+// Outputs the given name/value pair as an xml tag with attributes
+function commerce_shipworks_write_full_element($tag, $value, $attributes) {
+  echo '<'. $tag. ' ';
+  foreach ($attributes as $name => $attribValue) {
+    echo $name. '="'. htmlspecialchars($attribValue). '" ';
+  }
+  echo '>';
+  echo htmlspecialchars($value);
+  commerce_shipworks_write_close_tag($tag);
+}
+
+// Function used to output an error and quit.
+function commerce_shipworks_output_error($code, $error) {
+  commerce_shipworks_write_start_tag("Error");
+  commerce_shipworks_write_element("Code", $code);
+  commerce_shipworks_write_element("Description", $error);
+  commerce_shipworks_write_close_tag("Error");
+}
+
+// NOTE: Drupal stored time commly by unix timestamp, so below codes maybe need some change.
+// Converts an xml datetime string to sql date time
+function commerce_shipworks_to_local_sql_date($sqlUtc) {   
+  $pattern = "/^(\d{4})-(\d{2})-(\d{2})\T(\d{2}):(\d{2}):(\d{2})$/i";
+  if (preg_match($pattern, $sqlUtc, $dt)) {
+    $unixUtc = gmmktime($dt[4], $dt[5], $dt[6], $dt[2], $dt[3], $dt[1]);  
+    return date("Y-m-d H:i:s", $unixUtc);
+  }
+  return $sqlUtc;
+}
+
