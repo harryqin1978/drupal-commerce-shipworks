@@ -9,10 +9,10 @@
  * NOTE: I did not implement commerce_shipworks_action_update_shipment, for i can not find how to trigger it in ShipWorks.
  */
 
-define("SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
-define("SHIPWORKS_DEVELOPER", "Harry Qin (zergling9999@hotmail.com)");
-define("SHIPWORKS_MODULE_VERSION", "3.0.0");
-define("SHIPWORKS_SCHEMA_VERSION", "1.0.0");
+define("COMMERCE_SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
+define("COMMERCE_SHIPWORKS_DEVELOPER", "Harry Qin (zergling9999@hotmail.com)");
+define("COMMERCE_SHIPWORKS_MODULE_VERSION", "3.0.0");
+define("COMMERCE_SHIPWORKS_SCHEMA_VERSION", "1.0.0");
 
 /**
  * Implements hook_permission().
@@ -110,7 +110,7 @@ function commerce_shipworks_api() {
 
   // Open the XML output and root
   commerce_shipworks_write_xml_declaration();
-  commerce_shipworks_write_start_tag("ShipWorks", array("moduleVersion" => SHIPWORKS_MODULE_VERSION, "schemaVersion" => SHIPWORKS_SCHEMA_VERSION));
+  commerce_shipworks_write_start_tag("ShipWorks", array("moduleVersion" => COMMERCE_SHIPWORKS_MODULE_VERSION, "schemaVersion" => COMMERCE_SHIPWORKS_SCHEMA_VERSION));
 
   // If the admin module is installed, we make use of it
   if (commerce_shipworks_check_admin_login()) {
@@ -143,8 +143,8 @@ function commerce_shipworks_action_get_module()
 {
   commerce_shipworks_write_start_tag("Module");
   
-    commerce_shipworks_write_element("Platform", SHIPWORKS_PLATFORM);
-    commerce_shipworks_write_element("Developer", SHIPWORKS_DEVELOPER);
+    commerce_shipworks_write_element("Platform", COMMERCE_SHIPWORKS_PLATFORM);
+    commerce_shipworks_write_element("Developer", COMMERCE_SHIPWORKS_DEVELOPER);
 
     commerce_shipworks_write_start_tag("Capabilities");
       commerce_shipworks_write_element("DownloadStrategy", "ByModifiedTime");
@@ -156,6 +156,22 @@ function commerce_shipworks_action_get_module()
   commerce_shipworks_write_close_tag("Module");
 }
 
+// Write store data
+function commerce_shipworks_action_get_store()
+{
+  $name = variable_get('site_name', '');
+  $email = variable_get('site_mail', '');
+  $country = variable_get('site_default_country', '');
+  $website = url('<front>', array('absolute' => TRUE));
+
+  commerce_shipworks_write_start_tag("Store");
+    commerce_shipworks_write_element("Name", $name);
+    commerce_shipworks_write_element("Email", $email);
+    commerce_shipworks_write_element("Country", $country);
+    commerce_shipworks_write_element("Website", $website);
+  commerce_shipworks_write_close_tag("Store");
+}
+
 // Check to see if admin functions exist.  And if so, determine if the user
 // has access.
 function commerce_shipworks_check_admin_login() {
@@ -164,9 +180,9 @@ function commerce_shipworks_check_admin_login() {
   $post_username = isset($_REQUEST['username']) ? $_REQUEST['username'] : '';
   $post_password = isset($_REQUEST['password']) ? $_REQUEST['password'] : '';
   if ($api_username && $api_password && $api_username == $post_username && $api_password == $post_password) {
-    return true;
+    return TRUE;
   } else {
-    return false;
+    return FALSE;
   }
 }
 
