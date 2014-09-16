@@ -7,6 +7,10 @@
  * Intergrate ShipWorks application into Drupal Commerce.
  *
  * NOTE: I did not implement commerce_shipworks_action_update_shipment, for i can not find how to trigger it in ShipWorks.
+ *
+ * TODO: commerce_shipworks_action_update_shipment implement.
+ * TODO: show postlog records on Drupal admin backend.
+ * TODO: store shipping tracking number when ShipWroks upload it.
  */
 
 define("COMMERCE_SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
@@ -106,7 +110,30 @@ function commerce_shipworks_api() {
   // HTTP/1.0
   header("Pragma: no-cache");
 
-  // TODO: records http post requests and post values.
+  if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    $request_values = $_GET;
+  } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $request_values = $_POST;
+  }
+
+  $postvalues = "REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD'] . "\n";
+  $postvalues .= "post values:\n";
+  if (isset($request_values)) {
+    foreach ($request_values as $key => $value) {
+      if ($key != 'q') {
+        $postvalues .= "  " . $key . ": " . $value . "\n";
+      }
+    }
+  }
+  
+  $postlog_id = db_insert('commerce_shipworks_postlog')
+  ->fields(array(
+    'postvalues' => $postvalues,
+    'created' => REQUEST_TIME,
+  ))
+  ->execute();
+
+  // TODO: store output information.
 
   // Open the XML output and root
   commerce_shipworks_write_xml_declaration();
@@ -133,6 +160,13 @@ function commerce_shipworks_api() {
 
   // Close the output
   commerce_shipworks_write_close_tag("ShipWorks");
+
+  db_update('commerce_shipworks_postlog')
+  ->fields(array(
+    'success' => 1,
+  ))
+  ->condition('postlog_id', $postlog_id)
+  ->execute();
 
   // end output
   ob_end_flush();
