@@ -478,8 +478,7 @@ function commerce_shipworks_action_update_status() {
 function commerce_shipworks_action_update_shipment() {
   // get parameters
   $order_id = isset($_REQUEST['order']) ? (int) $_REQUEST['order'] : '';
-  $status = isset($_REQUEST['status']) ? $_REQUEST['status'] : '';
-  $comments = isset($_REQUEST['comments']) ? $_REQUEST['comments'] : '';
+  $tracking = isset($_REQUEST['tracking']) ? $_REQUEST['tracking'] : '';
 
   commerce_shipworks_write_start_tag('UpdateSuccess');
   commerce_shipworks_write_close_tag('UpdateSuccess');
