@@ -175,7 +175,9 @@ function commerce_shipworks_api() {
   ob_end_flush();
 }
 
-// Write module data
+/**
+ * Write module data
+ */
 function commerce_shipworks_action_get_module()
 {
   commerce_shipworks_write_start_tag("Module");
@@ -193,7 +195,9 @@ function commerce_shipworks_action_get_module()
   commerce_shipworks_write_close_tag("Module");
 }
 
-// Write store data
+/**
+ * Write store data
+ */
 function commerce_shipworks_action_get_store()
 {
   $name = variable_get('site_name', '');
@@ -209,7 +213,9 @@ function commerce_shipworks_action_get_store()
   commerce_shipworks_write_close_tag("Store");
 }
 
-// Returns the status codes for the store
+/**
+ * Returns the status codes for the store
+ */
 function commerce_shipworks_action_get_status_codes() {
 
   $statuses = commerce_order_states();
@@ -224,7 +230,9 @@ function commerce_shipworks_action_get_status_codes() {
   commerce_shipworks_write_close_tag("StatusCodes");
 }
 
-// Get the count of orders greater than the start ID
+/**
+ * Get the count of orders greater than the start ID
+ */
 function commerce_shipworks_action_get_count()
 {         
   $start = 0;
@@ -265,7 +273,9 @@ function commerce_shipworks_action_get_count()
   commerce_shipworks_write_element("OrderCount", $order_count);
 }
 
-// Get all orders greater than the given start id, limited by max count
+/**
+ * Get all orders greater than the given start id, limited by max count
+ */
 function commerce_shipworks_action_get_orders() {
   $start = 0;
 
@@ -429,15 +439,18 @@ function commerce_shipworks_action_get_orders() {
   commerce_shipworks_write_close_tag("Orders");
 }
 
-// writes a single order total
+/**
+ * Writes a single order total
+ */
 function commerce_shipworks_write_order_total($name, $value, $class, $impact = "add") {
   if ($value > 0) {
     commerce_shipworks_write_full_element("Total", $value, array("name" => $name, "class" => $class, "impact" => $impact));
   }
 }
 
-// Check to see if admin functions exist.  And if so, determine if the user
-// has access.
+/**
+ * Check to see if admin functions exist.  And if so, determine if the user has access.
+ */
 function commerce_shipworks_check_admin_login() {
   $api_username = variable_get('commerce_shipworks_api_username', '');
   $api_password = variable_get('commerce_shipworks_api_password', '');
@@ -450,11 +463,16 @@ function commerce_shipworks_check_admin_login() {
   }
 }
 
-// write xml documenta declaration
+/**
+ * Write xml documenta declaration
+ */
 function commerce_shipworks_write_xml_declaration() {
   echo "<?xml version=\"1.0\" standalone=\"yes\" ?>";
 }
 
+/**
+ * Write starting xml tag
+ */
 function commerce_shipworks_write_start_tag($tag, $attributes = null) {
   echo '<' . $tag;
   if ($attributes != null) {
@@ -466,19 +484,25 @@ function commerce_shipworks_write_start_tag($tag, $attributes = null) {
   echo '>';
 }
 
-// write closing xml tag
+/**
+ * Write closing xml tag
+ */
 function commerce_shipworks_write_close_tag($tag) {
   echo '</' . $tag . '>';
 }
 
-// Output the given tag\value pair
+/**
+ * Output the given tag\value pair
+ */
 function commerce_shipworks_write_element($tag, $value) {
   commerce_shipworks_write_start_tag($tag);
   echo htmlspecialchars($value);
   commerce_shipworks_write_close_tag($tag);
 }
 
-// Outputs the given name/value pair as an xml tag with attributes
+/**
+ * Outputs the given name/value pair as an xml tag with attributes
+ */
 function commerce_shipworks_write_full_element($tag, $value, $attributes) {
   echo '<'. $tag. ' ';
   foreach ($attributes as $name => $attribValue) {
@@ -489,7 +513,9 @@ function commerce_shipworks_write_full_element($tag, $value, $attributes) {
   commerce_shipworks_write_close_tag($tag);
 }
 
-// Function used to output an error and quit.
+/**
+ * Function used to output an error and quit.
+ */
 function commerce_shipworks_output_error($code, $error) {
   commerce_shipworks_write_start_tag("Error");
   commerce_shipworks_write_element("Code", $code);
@@ -497,7 +523,9 @@ function commerce_shipworks_output_error($code, $error) {
   commerce_shipworks_write_close_tag("Error");
 }
 
-// Converts an xml datetime string to unix timestamp
+/**
+ * Converts an xml datetime string to unix timestamp
+ */
 function commerce_shipworks_to_timestamp($sqlUtc) {
   $pattern = "/^(\d{4})-(\d{2})-(\d{2})\T(\d{2}):(\d{2}):(\d{2})$/i";
   if (preg_match($pattern, $sqlUtc, $dt)) {
@@ -507,7 +535,9 @@ function commerce_shipworks_to_timestamp($sqlUtc) {
   return FALSE;
 }
 
-// Converts an xml datetime string to sql date time
+/**
+ * Converts an xml datetime string to sql date time
+ */
 function commerce_shipworks_to_local_sql_date($sqlUtc) {
   if ($unixUtc = commerce_shipworks_to_timestamp($sqlUtc)) {
     return date("Y-m-d H:i:s", $unixUtc);
