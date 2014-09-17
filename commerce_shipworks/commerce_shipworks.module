@@ -20,6 +20,9 @@ define("COMMERCE_SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
 define("COMMERCE_SHIPWORKS_DEVELOPER", "Harry Qin (zergling9999@hotmail.com)");
 define("COMMERCE_SHIPWORKS_MODULE_VERSION", "3.0.0");
 define("COMMERCE_SHIPWORKS_SCHEMA_VERSION", "1.0.0");
+define("COMMERCE_SHIPWORKS_ERRORCODE_ACTION_NOT_SUPPORT", 1);
+define("COMMERCE_SHIPWORKS_ERRORCODE_VERIFICATION_FAILED", 2);
+define("COMMERCE_SHIPWORKS_ERRORCODE_UPDATE_FAILURE", 3);
 
 /**
  * Implements hook_permission().
@@ -155,10 +158,10 @@ function commerce_shipworks_api() {
       case 'updatestatus': commerce_shipworks_action_update_status(); break;
       case 'updateshipment': commerce_shipworks_action_update_shipment(); break;
       default:
-        commerce_shipworks_output_error(1, t('Action \'@action\' is not supported.', array('@action' => $action)));
+        commerce_shipworks_output_error(COMMERCE_SHIPWORKS_ERRORCODE_ACTION_NOT_SUPPORT, t('Action \'@action\' is not supported.', array('@action' => $action)));
     }
   } else {
-    commerce_shipworks_output_error(2, t('Verification failed.'));
+    commerce_shipworks_output_error(COMMERCE_SHIPWORKS_ERRORCODE_VERIFICATION_FAILED, t('Verification failed.'));
   }
 
   // Close the output
@@ -446,6 +449,40 @@ function commerce_shipworks_write_order_total($name, $value, $class, $impact = "
   if ($value > 0) {
     commerce_shipworks_write_full_element("Total", $value, array("name" => $name, "class" => $class, "impact" => $impact));
   }
+}
+
+/**
+ * Update order status
+ */
+function commerce_shipworks_action_update_status() {
+  // get parameters
+  $order_id = isset($_REQUEST['order']) ? (int) $_REQUEST['order'] : '';
+  $status = isset($_REQUEST['status']) ? $_REQUEST['status'] : '';
+  $comments = isset($_REQUEST['comments']) ? $_REQUEST['comments'] : '';
+
+  $order = commerce_order_load($order_id);
+  $order->status = $status;
+  $result = commerce_order_save($order);
+  if ($result === SAVED_UPDATED) {
+    commerce_shipworks_write_start_tag('UpdateSuccess');
+    commerce_shipworks_write_close_tag('UpdateSuccess');
+  } else {
+    $error_msg = 'Update order status failure! order: ' . $order_id . ' status: ' . $status . ' comments: ' . $comments;
+    commerce_shipworks_output_error(COMMERCE_SHIPWORKS_ERRORCODE_UPDATE_FAILURE, $error_msg);
+  }
+}
+
+/**
+ * Update order shipment (not available now!)
+ */
+function commerce_shipworks_action_update_shipment() {
+  // get parameters
+  $order_id = isset($_REQUEST['order']) ? (int) $_REQUEST['order'] : '';
+  $status = isset($_REQUEST['status']) ? $_REQUEST['status'] : '';
+  $comments = isset($_REQUEST['comments']) ? $_REQUEST['comments'] : '';
+
+  commerce_shipworks_write_start_tag('UpdateSuccess');
+  commerce_shipworks_write_close_tag('UpdateSuccess');
 }
 
 /**
