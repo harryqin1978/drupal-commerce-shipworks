@@ -13,7 +13,7 @@
  * TODO: store shipping tracking number when ShipWroks upload it.
  * TODO: product weight.
  * TODO: payment intergration.
- * TODO: shipping method intergration.
+ * TODO: product weight intergration.
  */
 
 define("COMMERCE_SHIPWORKS_PLATFORM", "Drupal Commerce 7.x-1.x");
@@ -344,6 +344,12 @@ function commerce_shipworks_action_get_orders() {
           'weight' => 0,  // Drupal Commerce has no weight setting, need 3rd party module or custom field. This is single product value.
         );
       }
+      $shipping_methods = array();
+      $shipping_items = commerce_line_item_load_multiple($line_item_ids, array('type' => 'shipping'));
+      foreach ($shipping_items as $shipping_item) {
+        $shipping_methods[] = $shipping_item->data['shipping_service']['title'];
+      }
+      $shipping_method = implode(' | ', $shipping_methods);
       $order_object_totals = array();
       $order_total_components = field_get_items('commerce_order', $order_object, 'commerce_order_total')[0]['data']['components'];
       foreach ($order_total_components as $order_total_component_key => $order_total_component) {
@@ -359,7 +365,7 @@ function commerce_shipworks_action_get_orders() {
         'order_number' => $order_object->order_id,
         'order_date' => gmdate("Y-m-d\TH:i:s", $order_object->created),
         'last_modified' => gmdate("Y-m-d\TH:i:s", $order_object->changed),
-        'shipping_method' => 'deliver',  // TODO: need connect to commerce_shipping module.
+        'shipping_method' => $shipping_method,
         'status_code' => $order_object->status,
         'customer_id' => $order_object->uid,
         'shipping_address' => array(
