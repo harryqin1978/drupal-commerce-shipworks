@@ -308,7 +308,8 @@ function commerce_shipworks_action_get_orders() {
   $orders = array();
 
   if ($start_utc) {
-    $result = db_query('SELECT order_id FROM {commerce_order} WHERE status NOT LIKE \'checkout_%\' AND status <> \'cart\' AND changed > :start_utc AND changed <= :end_utc ORDER BY changed LIMIT 0, ' . $maxcount,
+    $result = db_query(
+      'SELECT order_id FROM {commerce_order} WHERE status NOT LIKE \'checkout_%\' AND status <> \'cart\' AND changed > :start_utc AND changed <= :end_utc ORDER BY changed LIMIT 0, ' . $maxcount,
       array(
         ':start_utc' => $start_utc,
         ':end_utc' => $end_utc,
@@ -361,6 +362,24 @@ function commerce_shipworks_action_get_orders() {
           'impact' => ($order_total_component['name'] == 'base_price') ? 'none' : 'add',
         );
       }
+      $transaction_id = db_query(
+        'SELECT transaction_id FROM {commerce_payment_transaction} WHERE order_id = :order_id LIMIT 0, 1',
+        array(
+          ':order_id' => $order_id
+        )
+      )->fetchField();
+      $payment = NULL;
+      if ($transaction_id) {
+        $transaction = commerce_payment_transaction_load($transaction_id);
+        if ($transaction && isset($transaction->payment_method)) {
+          $payment_method = commerce_payment_method_load($transaction->payment_method);
+          if ($payment_method) {
+            $payment = array(
+              'method' => $payment_method['title'],
+            );
+          }
+        }
+      }
       $orders[] = array(
         'order_number' => $order_object->order_id,
         'order_date' => gmdate("Y-m-d\TH:i:s", $order_object->created),
@@ -390,6 +409,9 @@ function commerce_shipworks_action_get_orders() {
         'totals' => $order_object_totals,
         'grand_total' => field_get_items('commerce_order', $order_object, 'commerce_order_total')[0]['amount'] / 100,
       );
+      if ($payment) {
+        $orders[count($orders) - 1]['payment'] = $payment;
+      }
     }
   }
 
@@ -443,6 +465,11 @@ function commerce_shipworks_action_get_orders() {
         }
         commerce_shipworks_write_order_total(t('Grand total'), $order['grand_total'], 'grand_total', 'none');
       commerce_shipworks_write_close_tag("Totals");
+      if (isset($order['payment'])) {
+        commerce_shipworks_write_start_tag('Payment');
+          commerce_shipworks_write_element('Method', $order['payment']['method']);
+        commerce_shipworks_write_close_tag('Payment');
+      }
     commerce_shipworks_write_close_tag("Order");
   }
   commerce_shipworks_write_close_tag("Orders");
